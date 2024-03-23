@@ -1,5 +1,6 @@
 CONFIRACION DEL USUARIO JENKINS:
 El uso del comando sudo (comando para la ejecución de llamadas al sistema para usuarios administradores), el uso de la contraseña para la ejecución de cada comando siempre se hace presente, por lo que el flujo de ejecución del pipeline siempre se verá interrumpido por falta de permisos . Pero para poder evitar esto y que Jenkins pueda seguir con su ejecución, debemos modificar el archivo /etc/sudoers.tmp.
+    
     1. Ejecutamos el comando “visudo”
     2. Nos dirigimos a la parte de especificación de privilegios de usuarios
     3.Ingresamos la siguiente sentencia:
