@@ -1,0 +1,68 @@
+def CLAVE
+
+pipeline {
+    agent any
+    
+    parameters{
+        string(name:'Nombre')
+        string(name:'Apellido')
+        string(name:'Email')
+        choice(name:'Grupo', choices:['tecnologia','finanzas','contabilidad'])
+    }
+    environment {
+        CRED = credentials('LinuxAdminPass')
+    }
+    stages{
+        stage('Intalacion_paquetes'){
+            steps{
+                script {
+                    sh('sudo apt install pwgen')
+                }
+            }
+            
+        }
+        stage('Creacion_Grupos'){
+            steps{
+                script{
+                    def existe = sh(script:"getent group ${params.Grupo}", returnStatus: true)
+                    if(existe != 0){
+                        sh "sudo addgroup ${params.Grupo}"
+                    }
+                    
+                }
+            }
+        }
+        stage('Nuevo_Usuario'){
+            steps{
+                script{
+                    sh "sudo useradd ${params.Nombre}_${params.Apellido}"
+                    CLAVE = sh (script: "pwgen -s 12 1", returnStdout: true).trim()
+                    //ENLAZAMOS LA CLAVE CON EL USUARIO CREADO
+                    sh "echo '${params.Nombre}_${params.Apellido}:${CLAVE}' | sudo chpasswd"
+                    echo "CLAVE: ${CLAVE}"
+                }
+            }
+        }
+        stage('Add_Grupo'){
+            steps{
+                script{
+                    sh "sudo usermod -g ${params.Grupo} ${params.Nombre}_${params.Apellido}"
+                }
+            }
+        }
+        stage('Cambio_clave'){
+            steps{
+                script{
+                    sh "sudo chage -d0 ${params.Nombre}_${params.Apellido}"
+                }
+            }
+        }
+        stage('Mail'){
+            steps{
+               emailext (attachLog: true, body: 'Hola, se consta el envio del usuario y contraseña (${params.Nombre}_${params.Apellido} : ${CLAVE})', subject: 'Equipo de infraestructura: Usuario y Contraseña ', to: 'batubasilio@hotmail.com')
+            
+            }
+        }
+    }
+    
+}
